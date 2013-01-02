@@ -41,7 +41,8 @@ report_shipment_dispatched = filter s_join_ss_si_pd by shipment_status_b2b_prod_
 
 raw_report_variances = filter iiv_join_ivr_ii_pd by (chararray)STRSPLIT(UnixToISO((long)iiv_join_ivr__inventory_item_variance_b2b_prod__updated_at), 'T').$0 >= '[:START_DATE:]' and (chararray)STRSPLIT(UnixToISO((long)iiv_join_ivr__inventory_item_variance_b2b_prod__updated_at), 'T').$0 <= '[:END_DATE:]' and ('[:PRODUCT_ID:]' == 'ALL' or '[:PRODUCT_ID:]' == ivm_join_ii_pd__ii_join_pd__product_detail_b2b_prod__fsn);
 
-raw_op_report_audits_1 = filter ia_sl_join_ii_pd by UnixToISO((long)ia_join_ii_pd__inventory_audit_log_b2b_prod__updated_at) < '[:START_DATE:]' and ('[:PRODUCT_ID:]' == 'ALL' or '[:PRODUCT_ID:]' == ia_join_ii_pd__ii_join_pd__product_detail_b2b_prod__fsn);
+raw_op_report_audits_1 = filter ia_sl_join_ii_pd by (chararray)STRSPLIT(UnixToISO((long)ia_join_ii_pd__inventory_audit_log_b2b_prod__updated_at), 'T').$0 < '[:START_DATE:]' 
+						and ('[:PRODUCT_ID:]' == 'ALL' or '[:PRODUCT_ID:]' == ia_join_ii_pd__ii_join_pd__product_detail_b2b_prod__fsn);
                                             
 raw_op_report_audits_2 = GROUP raw_op_report_audits_1 by ia_join_ii_pd__inventory_audit_log_b2b_prod__inventory_item_id;
                          
@@ -62,7 +63,8 @@ raw_op_group_fsn_audits = GROUP raw_op_report_audits_3 by (ia_join_ii_pd__ii_joi
 raw_op_report_audits_start = foreach raw_op_group_fsn_audits generate group.$0 as warehouse_id, group.$1 as fsn, group.$2 as sku, group.$3 as cms_vertical, SUM(raw_op_report_audits_3.ia_join_ii_pd__inventory_audit_log_b2b_prod__quantity) as qty;
 
 
-raw_op_report_audits_1 = filter ia_sl_join_ii_pd by UnixToISO((long)ia_join_ii_pd__inventory_audit_log_b2b_prod__updated_at) < '[:END_DATE:]' and ('[:PRODUCT_ID:]' == 'ALL' or '[:PRODUCT_ID:]' == ia_join_ii_pd__ii_join_pd__product_detail_b2b_prod__fsn);
+raw_op_report_audits_1 = filter ia_sl_join_ii_pd by (chararray)STRSPLIT(UnixToISO((long)ia_join_ii_pd__inventory_audit_log_b2b_prod__updated_at), 'T').$0 < '[:END_DATE:]' 
+						and ('[:PRODUCT_ID:]' == 'ALL' or '[:PRODUCT_ID:]' == ia_join_ii_pd__ii_join_pd__product_detail_b2b_prod__fsn);
 
 raw_op_report_audits_2 = GROUP raw_op_report_audits_1 by ia_join_ii_pd__inventory_audit_log_b2b_prod__inventory_item_id;
 
