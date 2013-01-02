@@ -3,6 +3,7 @@ USE ia_sl_join_ii_pd = ia_sl_join_ii_pd_b2b;
 USE iiv_join_ivr_ii_pd  = iiv_join_ivr_ii_pd_b2b ;
 USE s_join_ss_si_pd = s_join_ss_si_pd_pkey_b2b ;
 USE iwt_join_pd_sl_b2b = iwt_join_pd_sl_b2b ;
+USE ot_inventory_migration_b2b = YetiMerge_ot_inventory_migration_b2b ;
 
 DEFINE UnixToISO org.apache.pig.piggybank.evaluation.datetime.convert.UnixToISO();
 
@@ -11,7 +12,7 @@ filtered_iwt_join_pd_sl_b2b = filter iwt_join_pd_sl_b2b by
     and (chararray)STRSPLIT(UnixToISO((long)iwt_join_pd_join_source__iwt_join_pd__wh_inventory_transfer_b2b__updated_at), 'T').$0 <= '[:END_DATE:]' 
     and ('[:PRODUCT_ID:]' == 'ALL' or '[:PRODUCT_ID:]' == iwt_join_pd_join_source__iwt_join_pd__product_detail_b2b_prod__fsn); 
 
-filtered_ot = filter ${ot_inventory_migration_b2b} by 
+filtered_ot = filter ot_inventory_migration_b2b by 
 	(chararray)STRSPLIT(UnixToISO((long)updated_at), 'T').$0 >= '[:START_DATE:]' 
     and (chararray)STRSPLIT(UnixToISO((long)updated_at), 'T').$0 <= '[:END_DATE:]';      
     
@@ -20,7 +21,7 @@ ot_ia = join filtered_ot by inventory_item_id, ia_sl_join_ii_pd by ia_join_ii_pd
 group_ot_ia_by_ii = GROUP ot_ia by filtered_ot::inventory_item_id;      
 
 group_ot_ia_by_ii1 = foreach group_ot_ia_by_ii{
-	A = ORDER ot_ia by ia_join_ii_pd__inventory_audit_log_b2b_prod__id;
+	A = ORDER ot_ia by ia_join_ii_pd__inventory_audit_log_b2b_prod__id asc;
         B = LIMIT A 1;
         generate flatten(B.ia_sl_join_ii_pd::ia_join_ii_pd__ii_join_pd__inventory_item_b2b_prod__warehouse_id), 
 		 flatten(B.filtered_ot::id),
