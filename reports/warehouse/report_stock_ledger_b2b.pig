@@ -48,7 +48,7 @@ raw_op_report_audits_1 = filter ia_sl_join_ii_pd by (chararray)STRSPLIT(UnixToIS
 raw_op_report_audits_2 = GROUP raw_op_report_audits_1 by ia_join_ii_pd__inventory_audit_log_b2b_prod__inventory_item_id;
                          
 raw_op_report_audits_3 = foreach raw_op_report_audits_2 {
-	A = ORDER raw_op_report_audits_1 by ia_join_ii_pd__inventory_audit_log_b2b_prod__updated_at desc, ia_join_ii_pd__inventory_audit_log_b2b_prod__id desc;
+	A = ORDER raw_op_report_audits_1 by ia_join_ii_pd__inventory_audit_log_b2b_prod__id desc;
 	B = LIMIT A 1;
 	audit = filter B by ia_join_ii_pd__inventory_audit_log_b2b_prod__quantity > 0 and storage_location_b2b_prod__label != 'outbound_shipment_table';
 
@@ -70,7 +70,7 @@ raw_op_report_audits_1 = filter ia_sl_join_ii_pd by (chararray)STRSPLIT(UnixToIS
 raw_op_report_audits_2 = GROUP raw_op_report_audits_1 by ia_join_ii_pd__inventory_audit_log_b2b_prod__inventory_item_id;
 
 raw_op_report_audits_3 = foreach raw_op_report_audits_2 {
-	A = ORDER raw_op_report_audits_1 by ia_join_ii_pd__inventory_audit_log_b2b_prod__updated_at desc, ia_join_ii_pd__inventory_audit_log_b2b_prod__id desc;
+	A = ORDER raw_op_report_audits_1 by ia_join_ii_pd__inventory_audit_log_b2b_prod__id desc;
 	B = LIMIT A 1;
 	audit = filter B by ia_join_ii_pd__inventory_audit_log_b2b_prod__quantity > 0 and storage_location_b2b_prod__label != 'outbound_shipment_table';
 
