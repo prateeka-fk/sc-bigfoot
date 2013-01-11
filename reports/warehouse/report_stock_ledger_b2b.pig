@@ -117,6 +117,6 @@ reports_adjustments_filtered = filter reports_adjustments by qty != 0;
                               
 reports_union = UNION report_grns, report_returns_rto, report_returns_sales, report_dispatched, report_variances, report_op_audits_start, reports_adjustments_filtered, report_op_audits_end, report_iwt_transferred_to, report_iwt_transferred_from, report_ot_migration;
                              
-filtered_RESULT = filter reports_union by ('[:WAREHOUSE_ID:]' == 'ALL' or '[:WAREHOUSE_ID:]' == warehouse_id);
+filtered_wh_vertical_RESULT = filter reports_union by ('[:VERTICAL:]' == 'ALL' or '[:VERTICAL:]' == cms_vertical) and ('[:WAREHOUSE_ID:]' == 'ALL' or '[:WAREHOUSE_ID:]' == warehouse_id);
                                 
-RESULT = ORDER filtered_RESULT by time, warehouse_id;
+RESULT = ORDER filtered_wh_vertical_RESULT by time, warehouse_id;
