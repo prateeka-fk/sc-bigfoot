@@ -30,7 +30,7 @@ flatten(B.filtered_ot::updated_at);
 };                                                                                    
 
 -- SHIPMENTS DISPATCHED --
-report_shipment_dispatched = filter s_join_ss_si by warehouse_b2b_production_shipment_statuses__status == 'dispatched' and warehouse_b2b_production_shipment_statuses__status == 'outgoing' and (chararray)STRSPLIT(UnixToISO((long)warehouse_b2b_production_shipment_statuses__updated_at), 'T').$0 >= '[:START_DATE:]' and (chararray)STRSPLIT(UnixToISO((long)warehouse_b2b_production_shipment_statuses__updated_at), 'T').$0 <= '[:END_DATE:]' and ('[:PRODUCT_ID:]' == 'ALL' or '[:PRODUCT_ID:]' == warehouse_b2b_production_shipment_items__fsn);
+report_shipment_dispatched = filter s_join_ss_si by warehouse_b2b_production_shipment_statuses__status == 'dispatched' and warehouse_b2b_production_shipments__shipment_type == 'outgoing' and (chararray)STRSPLIT(UnixToISO((long)warehouse_b2b_production_shipment_statuses__updated_at), 'T').$0 >= '[:START_DATE:]' and (chararray)STRSPLIT(UnixToISO((long)warehouse_b2b_production_shipment_statuses__updated_at), 'T').$0 <= '[:END_DATE:]' and ('[:PRODUCT_ID:]' == 'ALL' or '[:PRODUCT_ID:]' == warehouse_b2b_production_shipment_items__fsn);
 
 -- VARIANCES --
 report_variances = filter iiv_join_ivr_ii by (chararray)STRSPLIT(UnixToISO((long)iiv_join_ivr__warehouse_b2b_production_inventory_item_variances__updated_at), 'T').$0 >= '[:START_DATE:]' and (chararray)STRSPLIT(UnixToISO((long)iiv_join_ivr__warehouse_b2b_production_inventory_item_variances__updated_at), 'T').$0 <= '[:END_DATE:]' and ('[:PRODUCT_ID:]' == 'ALL' or '[:PRODUCT_ID:]' == ivm_join_ii__warehouse_b2b_production_inventory_items__fsn);
@@ -80,7 +80,7 @@ report_variances = foreach report_variances generate ivm_join_ii__warehouse_b2b_
 
 report_iwt_transferred_to = foreach filtered_iwt_join_sl_b2b generate iwt_join_source__warehouse_b2b_production_warehouse_inventory_transfers__dest_warehouse_id as warehouse_id, CONCAT('VARPOS',iwt_join_source__warehouse_b2b_production_warehouse_inventory_transfers__id) as internal_id, 'NA' as external_id, iwt_join_source__warehouse_b2b_production_warehouse_inventory_transfers__fsn as fsn, iwt_join_source__warehouse_b2b_production_warehouse_inventory_transfers__sku as sku, iwt_join_source__warehouse_b2b_production_warehouse_inventory_transfers__quantity as qty, UnixToISO((long)iwt_join_source__warehouse_b2b_production_warehouse_inventory_transfers__updated_at) as time,'IWT : Transferred to this wh' as transaction_type, '' as created_by; 
 
-report_iwt_transferred_from = foreach filtered_iwt_join_sl_b2b generate iwt_join_source__warehouse_b2b_production_warehouse_inventory_transfers__source_warehouse_id as warehouse_id, CONCAT('VARNEG',iwt_join_source__warehouse_b2b_production_warehouse_inventory_transfers__id) as internal_id, 'NA' as external_id, iwt_join_source__warehouse_b2b_production_warehouse_inventory_transfers__fsn as fsn, iwt_join_source__warehouse_b2b_production_warehouse_inventory_transfers__sku as sku, iwt_join_source__warehouse_b2b_production_warehouse_inventory_transfers__quantity as qty, UnixToISO((long)iwt_join_source__warehouse_b2b_production_warehouse_inventory_transfers__updated_at) as time,'IWT : Transferred from this wh' as transaction_type, '' as created_by; 
+report_iwt_transferred_from = foreach filtered_iwt_join_sl_b2b generate iwt_join_source__warehouse_b2b_production_warehouse_inventory_transfers__source_warehouse_id as warehouse_id, CONCAT('VARNEG',iwt_join_source__warehouse_b2b_production_warehouse_inventory_transfers__id) as internal_id, 'NA' as external_id, iwt_join_source__warehouse_b2b_production_warehouse_inventory_transfers__fsn as fsn, iwt_join_source__warehouse_b2b_production_warehouse_inventory_transfers__sku as sku, -iwt_join_source__warehouse_b2b_production_warehouse_inventory_transfers__quantity as qty, UnixToISO((long)iwt_join_source__warehouse_b2b_production_warehouse_inventory_transfers__updated_at) as time,'IWT : Transferred from this wh' as transaction_type, '' as created_by; 
 
 report_ot_migration = foreach group_ot_ia_by_ii1 generate null::ia_sl_join_ii::ia_join_ii__warehouse_b2b_production_inventory_items__warehouse_id as warehouse_id, CONCAT('OT',null::filtered_ot::id) as internal_id, 'NA' as external_id, null::ia_sl_join_ii::ia_join_ii__warehouse_b2b_production_inventory_items__fsn as fsn, null::ia_sl_join_ii::ia_join_ii__warehouse_b2b_production_inventory_items__sku as sku, null::ia_sl_join_ii::ia_join_ii__warehouse_b2b_production_inventory_audit_logs__quantity as quantity, UnixToISO((long)null::filtered_ot::updated_at) as time, 'OT to FLO migration' as transaction_type, '' as created_by;
 
@@ -101,7 +101,10 @@ reports_adjustments_filtered = filter reports_adjustments by qty != 0;
 reports_union = UNION report_grns, report_dispatched, report_variances, report_op_audits_start, reports_adjustments_filtered, report_op_audits_end, report_iwt_transferred_to, report_iwt_transferred_from, report_ot_migration;
 
 filtered_RESULT = filter reports_union by ('[:WAREHOUSE_ID:]' == 'ALL' or '[:WAREHOUSE_ID:]' == warehouse_id);
-RESULT = ORDER filtered_RESULT by time, warehouse_id;
+
+
+
+RESULT = ORDER filtered_RESULT by warehouse_id, time;
 
 
 
