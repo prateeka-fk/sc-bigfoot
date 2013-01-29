@@ -6,6 +6,7 @@ USE ot_inventory_migration_b2b = YetiMerge_warehouse_b2b_production_opentaps_inv
 USE ia_sl_join_ii = warehouse_b2b_production_inventory_transactions_view;
 USE s_join_ss_si = warehouse_b2b_production_shipments_view;
 USE iiv_join_ivr_ii = warehouse_b2b_production_inventory_variances_view;
+USE product_details = YetiMerge_warehouse_b2b_production_product_details;
 
 -- GRN INWARDED --
 raw_filtered_grn_join_ii = filter grn_join_ii by (chararray)STRSPLIT(UnixToISO((long)warehouse_b2b_production_goods_receipt_notes__updated_at), 'T').$0 >= '[:START_DATE:]' and (chararray)STRSPLIT(UnixToISO((long)warehouse_b2b_production_goods_receipt_notes__updated_at), 'T').$0 <= '[:END_DATE:]' and ('[:PRODUCT_ID:]' == 'ALL' or '[:PRODUCT_ID:]' == warehouse_b2b_production_inventory_items__fsn);
@@ -102,9 +103,13 @@ reports_union = UNION report_grns, report_dispatched, report_variances, report_o
 
 filtered_RESULT = filter reports_union by ('[:WAREHOUSE_ID:]' == 'ALL' or '[:WAREHOUSE_ID:]' == warehouse_id);
 
+product_details_join_result = join filtered_RESULT by (fsn, sku), product_details by (fsn,sku); 
 
+filter_by_cms_vertical = filter product_details_join_result by ('[:CMS_VERTICAL:]' == 'ALL' OR '[:CMS_VERTICAL:]' == product_details::cms_vertical);
 
-RESULT = ORDER filtered_RESULT by warehouse_id, time;
+RESULT_with_product_details =  foreach filter_by_cms_vertical generate filtered_RESULT::warehouse_id as warehouse_id, filtered_RESULT::internal_id as internal_id, filtered_RESULT::external_id as external_id, product_details::cms_vertical as cms_vertical, filtered_RESULT::fsn as FSN, filtered_RESULT::sku as SKU, CONCAT(product_details::wid_prefix,product_details::wid_sequence_number) as wid, filtered_RESULT::qty as quantity, filtered_RESULT::time as time, filtered_RESULT::transaction_type as transaction_type, filtered_RESULT::created_by as created_by;
+
+RESULT = ORDER RESULT_with_product_details by warehouse_id, time;
 
 
 
